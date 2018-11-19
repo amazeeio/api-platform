@@ -3,16 +3,10 @@ vcl 4.0;
 import std;
 
 backend default {
-  .host = "api";
-  .port = "80";
-  # Health check
-  #.probe = {
-  #  .url = "/";
-  #  .timeout = 5s;
-  #  .interval = 10s;
-  #  .window = 5;
-  #  .threshold = 3;
-  #}
+  .host = "${VARNISH_BACKEND_HOST:-api}";
+  .port = "${VARNISH_BACKEND_PORT:-8080}";
+  .first_byte_timeout = 35m;
+  .between_bytes_timeout = 10m;
 }
 
 # Hosts allowed to send BAN requests

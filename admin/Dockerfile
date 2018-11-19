@@ -1,4 +1,4 @@
-FROM node:10.10-alpine
+FROM amazeeio/node:10
 
 RUN mkdir -p /usr/src/admin
 
