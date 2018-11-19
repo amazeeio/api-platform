@@ -41,9 +41,7 @@ RUN set -eux; \
 	apk del .build-deps
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-# as api-platform ships it's own php.ini, delete ours first
-RUN rm /usr/local/etc/php/php.ini
-RUN ln -s /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
+
 COPY docker/php/api-platform.ini /usr/local/etc/php/conf.d/
 
 # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
@@ -76,9 +74,3 @@ RUN set -eux; \
 	composer run-script --no-dev post-install-cmd; \
 	chmod +x bin/console; sync
 VOLUME /srv/api/var
-
-COPY docker/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
-RUN chmod +x /usr/local/bin/docker-entrypoint
-
-ENTRYPOINT ["/sbin/tini", "--", "/lagoon/entrypoints.sh"]
-CMD ["php-fpm"]
