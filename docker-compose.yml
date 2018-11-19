@@ -1,17 +1,19 @@
 version: '3.4'
 
+x-environment:
+  &default-environment
+    AMAZEEIO: AMAZEEIO
+
 services:
   php:
-    image: ${CONTAINER_REGISTRY_BASE}/php
     build:
       context: ./api
-      target: api_platform_php
-      cache_from:
-        - ${CONTAINER_REGISTRY_BASE}/php
-        - ${CONTAINER_REGISTRY_BASE}/nginx
-        - ${CONTAINER_REGISTRY_BASE}/varnish
+      dockerfile: Dockerfile.php
+    labels:
+      lagoon.type: nginx-php
+      lagoon.name: nginx
     depends_on:
-      - db
+      - mariadb
     env_file:
       - ./api/.env
     # Comment out these volumes in production
@@ -19,33 +21,39 @@ services:
       - ./api:/srv/api:rw,cached
       # If you develop on Linux, uncomment the following line to use a bind-mounted host directory instead
       # - ./api/var:/srv/api/var:rw
+    networks:
+      - amazeeio-network
+      - default
 
   api:
-    image: ${CONTAINER_REGISTRY_BASE}/nginx
     build:
       context: ./api
-      target: api_platform_nginx
-      cache_from:
-        - ${CONTAINER_REGISTRY_BASE}/php
-        - ${CONTAINER_REGISTRY_BASE}/nginx
-        - ${CONTAINER_REGISTRY_BASE}/varnish
+      dockerfile: Dockerfile.nginx
+      args:
+        PHP_IMAGE: api-platform_php
+    labels:
+      lagoon.type: nginx-php
+      lagoon.name: nginx
+      lagoon.deployment.servicetype: nginx
     depends_on:
       - php
     # Comment out this volume in production
     volumes:
       - ./api/public:/srv/api/public:ro
-    ports:
-      - "8080:80"
+    environment:
+      << : *default-environment
+      LAGOON_LOCALDEV_URL: api-api-platform.docker.amazee.io
+    networks:
+      - amazeeio-network
+      - default
 
   cache-proxy:
-    image: ${CONTAINER_REGISTRY_BASE}/varnish
     build:
       context: ./api
-      target: api_platform_varnish
-      cache_from:
-        - ${CONTAINER_REGISTRY_BASE}/php
-        - ${CONTAINER_REGISTRY_BASE}/nginx
-        - ${CONTAINER_REGISTRY_BASE}/varnish
+      dockerfile: Dockerfile.varnish
+    labels:
+      lagoon.type: varnish
+      lagoon.deployment.servicetype: varnish
     depends_on:
       - api
     volumes:
@@ -53,69 +61,79 @@ services:
     tmpfs:
       - /usr/local/var/varnish:exec
     ports:
-      - "8081:80"
-
-  db:
-    # In production, you may want to use a managed database service
-    image: postgres:10-alpine
+      - "8080"
     environment:
-      - POSTGRES_DB=api
-      - POSTGRES_USER=api-platform
-      # You should definitely change the password in production
-      - POSTGRES_PASSWORD=!ChangeMe!
+      << : *default-environment
+      LAGOON_ROUTE: http://api-platform.docker.amazee.io
+      AMAZEEIO_HTTP_PORT: 8080
+    links:
+      - api
+    networks:
+      - amazeeio-network
+      - default
+
+  mariadb:
+    # In production, you may want to use a managed database service
+    build:
+      context: ./api
+      dockerfile: Dockerfile.mariadb
+    labels:
+      lagoon.type: mariadb
     volumes:
-      - db-data:/var/lib/postgresql/data:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
+      - db-data:/var/lib/mysql
     ports:
-      - "5432:5432"
+      - "3306"
 
   client:
     # Use a static website hosting service in production
     # See https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#deployment
-    image: ${CONTAINER_REGISTRY_BASE}/client
     build:
       context: ./client
-      cache_from:
-        - ${CONTAINER_REGISTRY_BASE}/client
+      dockerfile: Dockerfile
+    labels:
+      lagoon.type: node
+      lagoon.deployment.servicetype: node
     env_file:
       - ./client/.env
     volumes:
       - ./client:/usr/src/client:rw,cached
       - /usr/src/client/node_modules
     ports:
-      - "80:3000"
-
+      - "3000"
+    environment:
+      << : *default-environment
+      AMAZEEIO_HTTP_PORT: 3000
+      AMAZEEIO_URL: client-api-platform.docker.amazee.io
+    networks:
+      - amazeeio-network
+      - default
   admin:
     # Use a static website hosting service in production
     # See https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#deployment
-    image: ${CONTAINER_REGISTRY_BASE}/admin
     build:
       context: ./admin
-      cache_from:
-        - ${CONTAINER_REGISTRY_BASE}/admin
+      dockerfile: Dockerfile
+    labels:
+      lagoon.type: node
+      lagoon.deployment.servicetype: node
     env_file:
       - ./admin/.env
     volumes:
       - ./admin:/usr/src/admin:rw,cached
       - /usr/src/admin/node_modules
     ports:
-      - "81:3000"
-
-  h2-proxy:
-    # Don't use this proxy in prod
-    build:
-      context: ./h2-proxy
-    depends_on:
-      - client
-      - admin
-      - api
-      - cache-proxy
-    ports:
-      - "443:443"
-      - "444:444"
-      - "8443:8443"
-      - "8444:8444"
+      - "3000"
+    environment:
+      << : *default-environment
+      AMAZEEIO_HTTP_PORT: 3000
+      AMAZEEIO_URL: admin-api-platform.docker.amazee.io
+    networks:
+      - amazeeio-network
+      - default
 
 volumes:
   db-data: {}
+
+networks:
+  amazeeio-network:
+    external: true

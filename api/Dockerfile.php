@@ -1,11 +1,4 @@
-# the different stages of this Dockerfile are meant to be built into separate images
-# https://docs.docker.com/compose/compose-file/#target
-
-ARG PHP_VERSION=7.2
-ARG NGINX_VERSION=1.15
-ARG VARNISH_VERSION=6.0
-
-FROM php:${PHP_VERSION}-fpm-alpine AS api_platform_php
+FROM amazeeio/php:7.2-fpm AS api-platform_php
 
 # persistent / runtime deps
 RUN apk add --no-cache \
@@ -13,7 +6,6 @@ RUN apk add --no-cache \
 		file \
 		gettext \
 		git \
-		postgresql-client \
 	;
 
 ARG APCU_VERSION=5.1.12
@@ -22,20 +14,15 @@ RUN set -eux; \
 		$PHPIZE_DEPS \
 		icu-dev \
 		libzip-dev \
-		postgresql-dev \
 		zlib-dev \
 	; \
 	\
 	docker-php-ext-configure zip --with-libzip; \
 	docker-php-ext-install -j$(nproc) \
 		intl \
-		pdo_pgsql \
+		pdo_mysql \
 		zip \
 	; \
-	pecl install \
-		apcu-${APCU_VERSION} \
-	; \
-	pecl clear-cache; \
 	docker-php-ext-enable \
 		apcu \
 		opcache \
@@ -52,8 +39,8 @@ RUN set -eux; \
 	apk del .build-deps
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN ln -s $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini
-COPY docker/php/api-platform.ini $PHP_INI_DIR/conf.d/
+
+COPY docker/php/api-platform.ini /usr/local/etc/php/conf.d/
 
 # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
 ENV COMPOSER_ALLOW_SUPERUSER=1
@@ -74,6 +61,7 @@ RUN set -eux; \
 	composer clear-cache
 
 # copy only specifically what we need
+COPY .env /srv/api/
 COPY bin bin/
 COPY config config/
 COPY public public/
@@ -85,21 +73,3 @@ RUN set -eux; \
 	composer run-script --no-dev post-install-cmd; \
 	chmod +x bin/console; sync
 VOLUME /srv/api/var
-
-COPY docker/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
-RUN chmod +x /usr/local/bin/docker-entrypoint
-
-ENTRYPOINT ["docker-entrypoint"]
-CMD ["php-fpm"]
-
-FROM nginx:${NGINX_VERSION}-alpine AS api_platform_nginx
-
-COPY docker/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
-
-WORKDIR /srv/api
-
-COPY --from=api_platform_php /srv/api/public public/
-
-FROM cooptilleuls/varnish:${VARNISH_VERSION}-alpine AS api_platform_varnish
-
-COPY docker/varnish/conf/default.vcl /usr/local/etc/varnish/default.vcl

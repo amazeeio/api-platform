@@ -1,0 +1,7 @@
+FROM amazeeio/mariadb
+
+ENV MARIADB_DATABASE=api \
+    MARIADB_USER=api-platform \
+    MARIADB_PASSWORD=!ChangeMe! \
+    MARIADB_CHARSET=utf8 \
+    MARIADB_COLLATION=utf8_general_ci
