@@ -53,6 +53,7 @@ services:
       dockerfile: Dockerfile.varnish
     labels:
       lagoon.type: varnish
+      lagoon.deployment.servicetype: varnish
     depends_on:
       - api
     volumes:
@@ -78,6 +79,7 @@ services:
       dockerfile: Dockerfile.postgres
     labels:
       lagoon.type: postgres
+      lagoon.deployment.servicetype: postgres
     volumes:
       - db-data:/var/lib/postgresql/data:rw
       # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
@@ -93,6 +95,7 @@ services:
       dockerfile: Dockerfile
     labels:
       lagoon.type: node
+      lagoon.deployment.servicetype: node
     env_file:
       - ./client/.env
     volumes:
@@ -115,6 +118,7 @@ services:
       dockerfile: Dockerfile
     labels:
       lagoon.type: node
+      lagoon.deployment.servicetype: node
     env_file:
       - ./admin/.env
     volumes:
