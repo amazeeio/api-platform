@@ -1,5 +1,5 @@
 ARG PHP_IMAGE
-FROM ${PHP_IMAGE} as api_platform_php
+FROM ${PHP_IMAGE} as api-platform_php
 
 FROM amazeeio/nginx AS api_platform_nginx
 
@@ -7,4 +7,4 @@ COPY docker/nginx/conf.d/default.conf /etc/nginx/conf.d/app.conf
 
 WORKDIR /srv/api
 
-COPY --from=api_platform_php /srv/api/public public/
+COPY --from=api-platform_php /srv/api/public public/

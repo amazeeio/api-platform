@@ -1,4 +1,4 @@
-FROM amazeeio/php:7.2-fpm AS api_platform_php
+FROM amazeeio/php:7.2-fpm AS api-platform_php
 
 # persistent / runtime deps
 RUN apk add --no-cache \
