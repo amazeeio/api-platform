@@ -63,6 +63,7 @@ RUN set -eux; \
 	composer clear-cache
 
 # copy only specifically what we need
+COPY .env /srv/api/
 COPY bin bin/
 COPY config config/
 COPY public public/
