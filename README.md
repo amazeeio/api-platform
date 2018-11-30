@@ -1,4 +1,24 @@
 This is a fork of https://github.com/api-platform/api-platform . Do not fork this project to run yours, it will not be updated. We suggest forking the original project, and copying in the modified docker-compose.yml, Dockerfiles, and the .lagoon.yml file to run your api-platform project.
+Files which we have modified for api-platform working on Lagoon are:
+
+```
+.lagoon.yml
+admin/Dockerfile
+api/.dockerignore
+api/.env
+api/.env.dist
+api/.gitignore
+api/Dockerfile.mariadb
+api/Dockerfile.nginx
+api/Dockerfile.php
+api/Dockerfile.varnish
+api/config/packages/doctrine.yaml
+api/docker/nginx/config.d/default.conf
+api/docker/php/docker-entrypoint.sh
+api/docker/varnish/conf/default.vcl
+client/Dockerfile
+docker-compose.yml
+```
 
 <h1 align="center"><a href="https://api-platform.com"><img src="https://api-platform.com/logo-250x250.png" alt="API Platform"></a></h1>
 
