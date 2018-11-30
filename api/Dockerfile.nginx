@@ -7,6 +7,4 @@ COPY docker/nginx/conf.d/default.conf /etc/nginx/conf.d/app.conf
 
 WORKDIR /srv/api
 
-FROM api_platform_php
-
 COPY --from=api_platform_php /srv/api/public public/
