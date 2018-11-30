@@ -18,8 +18,8 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'bin/console' ]; then
 		ln -sf ${PHP_INI_DIR}/php.ini-production ${PHP_INI_DIR}/php.ini
 	fi
 
-	>&2 echo "Waiting for Postgres to be ready..."
-	until pg_isready --timeout=0 --dbname="${DATABASE_URL}"; do
+	>&2 echo "Waiting until mariadb is ready.."
+	until $(nc -zv $MARIADB_HOST 3306); do
 		sleep 1
 	done
 

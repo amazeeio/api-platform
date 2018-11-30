@@ -6,7 +6,6 @@ RUN apk add --no-cache \
 		file \
 		gettext \
 		git \
-		postgresql-client \
 	;
 
 ARG APCU_VERSION=5.1.12
@@ -15,14 +14,13 @@ RUN set -eux; \
 		$PHPIZE_DEPS \
 		icu-dev \
 		libzip-dev \
-		postgresql-dev \
 		zlib-dev \
 	; \
 	\
 	docker-php-ext-configure zip --with-libzip; \
 	docker-php-ext-install -j$(nproc) \
 		intl \
-		pdo_pgsql \
+		pdo_mysql \
 		zip \
 	; \
 	docker-php-ext-enable \

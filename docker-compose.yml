@@ -13,7 +13,7 @@ services:
       lagoon.type: nginx-php
       lagoon.name: nginx
     depends_on:
-      - db
+      - mariadb
     env_file:
       - ./api/.env
     # Comment out these volumes in production
@@ -72,20 +72,17 @@ services:
       - amazeeio-network
       - default
 
-  db:
+  mariadb:
     # In production, you may want to use a managed database service
     build:
       context: ./api
-      dockerfile: Dockerfile.postgres
+      dockerfile: Dockerfile.mariadb
     labels:
-      lagoon.type: postgres
-      lagoon.deployment.servicetype: postgres
+      lagoon.type: mariadb
     volumes:
-      - db-data:/var/lib/postgresql/data:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
+      - db-data:/var/lib/mysql
     ports:
-      - "5432"
+      - "3306"
 
   client:
     # Use a static website hosting service in production
