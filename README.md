@@ -1,3 +1,5 @@
+This is a fork of https://github.com/api-platform/api-platform . Do not fork this project to run yours, it will not be updated. We suggest forking the original project, and copying in the modified docker-compose.yml, Dockerfiles, and the .lagoon.yml file to run your api-platform project.
+
 <h1 align="center"><a href="https://api-platform.com"><img src="https://api-platform.com/logo-250x250.png" alt="API Platform"></a></h1>
 
 API Platform is a next-generation web framework designed to easily create API-first projects without compromising extensibility
